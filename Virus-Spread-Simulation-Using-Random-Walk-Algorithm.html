@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+</head>
+
+<body>
+
+	<table border="1">
+		<tr>
+			<td>Hari ke-</td>
+		</tr>
+		<tr>
+			<td>Jumlah terinfeksi</td>
+		</tr>
+	</table>
+	<span style="color:black">hitam</span> : sehat<br>
+	<span style="color:red">merah</span> : terinfeksi<br>
+	<span style="color:green">hijau</span> : imun<br>
+
+    <script src="p5.min.js"></script>
+    <script type="text/javascript">
+        var T = 500, stepSize = 10, N = 200, moveRatio = 80, infectRatio = 5, recoveryTime = 10;
+        let canvasHeight = 600, canvasWidth = 600;
+
+        var Dots = [];
+
+        function Walker(h) {
+			let r1 = Math.floor((Math.random() * (canvasWidth-10)) + 0);
+			let r2 = Math.floor((Math.random() * (canvasWidth-10)) + 0);
+        	this.pos = createVector(r1, r2);
+        	this.health = h;
+        	this.recCounter = 0;
+
+        	this.draw = function() {
+        		let c = '';
+				if (this.health == 'healthy') {
+					c = 'black';
+				} else if (this.health == 'infected') {
+					c = 'red';
+				} else {
+					c = 'green';
+				}
+        		fill(c);
+				noStroke();
+	            ellipse(this.pos.x, this.pos.y, 10, 10);
+        	}
+
+        	this.move = function() {
+        		let mR = Math.floor((Math.random() * 100) + 1);
+        		if (mR <= moveRatio) {
+	        		let r = floor(random(4));
+		            switch (r) {
+		                case 0:
+		                    this.pos.x = this.pos.x + stepSize;
+		                    break;
+		                case 1:
+		                    this.pos.x = this.pos.x - stepSize;
+		                    break;
+		                case 2:
+		                    this.pos.y = this.pos.y + stepSize;
+		                    break;
+		                case 3:
+		                    this.pos.y = this.pos.y - stepSize;
+		                    break;
+		            }
+		            if (this.pos.x > (canvasWidth-10)) {
+						this.pos.x = this.pos.x - (canvasWidth-10);
+					}
+					if (this.pos.x < 0) {
+						this.pos.x = this.pos.x + (canvasWidth-10);
+					}
+					if (this.pos.y > (canvasWidth-10)) {
+						this.pos.y = this.pos.y - (canvasWidth-10);
+					}
+					if (this.pos.y < 0) {
+						this.pos.y = this.pos.y + (canvasWidth-10);
+					}
+        		}
+        	}
+        }
+
+        function setup() {
+            createCanvas(canvasWidth, canvasHeight);
+            x = canvasWidth / 2;
+            y = canvasHeight / 2;
+
+            for (let i = 0; i < N; i++) {
+            	let h = '';
+				let r = Math.random() * 100 + 0;
+				if (r <= infectRatio) {
+					h = 'infected';
+				} else {
+					h = 'healthy';
+				}
+            	Dots.push(new Walker(h));
+            }
+        }
+
+        function checkSliced() {
+        	let inf = Dots.filter(function(item) {
+        		return item.health == 'infected';
+        	});
+        	let hel = Dots.filter(function(item) {
+        		return item.health == 'healthy';
+        	});
+        	// console.log(inf);
+        	for (const i of inf) {
+        		for (const h of hel) {
+        			let d = int(dist(i.pos.x, i.pos.y, h.pos.x, h.pos.y));
+        			if (d < 10) {
+        				h.health = 'infected';
+        				h.recCounter = 1;
+        			}
+        		}
+        	}
+        }
+
+        function checkRecovered() {
+        	let inf = Dots.filter(function(item) {
+        		return item.health == 'infected';
+        	});
+        	for (const i of inf) {
+        		if (i.recCounter > 10) {
+        			i.health = 'recovered';
+        		} else {
+        			i.recCounter++;
+        		}
+        	}
+        }
+
+        let timeStamp = 1;
+        function draw() {
+
+            background('#95a5a6');
+
+            for (const dot of Dots) {
+            	dot.draw();
+            	checkSliced();
+            	dot.move();
+            }
+        	let inf = Dots.filter(function(item) {
+        		return item.health == 'infected';
+        	});
+            // console.log(timeStamp);
+            sleep(T);
+            checkRecovered();
+
+            // update data
+            let row = document.getElementsByTagName('tr');
+            // console.log(row);
+            row[0].innerHTML += '<td>' + (timeStamp) + '</td>';
+            row[1].innerHTML += '<td>' + inf.length + '</td>';
+            timeStamp++;
+
+            if (inf.length == 0) noLoop();
+
+        }
+
+        function sleep(milliseconds) {
+            var start = new Date().getTime();
+            for (var i = 0; i < 1e7; i++) {
+                if ((new Date().getTime() - start) > milliseconds) {
+                    break;
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
